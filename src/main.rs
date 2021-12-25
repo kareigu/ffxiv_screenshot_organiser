@@ -1,18 +1,20 @@
 use regex::Regex;
 use std::fs::DirEntry;
-use std::time::Instant;
+use chrono::{Date, Local};
+use chrono::prelude::*;
 
 const SS_FORMAT: &str = r#"[0-9]+_([0-1][0-9])([0-3][0-9])([0-9]{4})_.+(\.png|jpg)"#;
+const OUTPUT_FOLDER: &str = "_screenshots";
 
 #[derive(Debug)]
 struct ScreenshotData {
     file: DirEntry,
-    timestamp: Timestamp,
+    timestamp: Date<Local>,
 }
 
 impl ScreenshotData {
     pub fn from_direntry(file: DirEntry) -> Self {
-        let timestamp = Timestamp::from_direntry(&file)
+        let timestamp = date_from_direntry(&file)
             .expect("Malformed timestamp");
         Self {
             file,
@@ -21,38 +23,40 @@ impl ScreenshotData {
     }
 }
 
-#[derive(Debug)]
-struct Timestamp(String);
+fn date_from_direntry(file: &DirEntry) -> Option<Date<Local>> {
+    let name = format!("{:#?}", file.file_name());
+    let rgx = Regex::new(SS_FORMAT)
+        .expect("Error constructing regex");
+    
+    let parts = rgx.captures(name.as_str());
 
-impl Timestamp {
-    pub fn from_direntry(file: &DirEntry) -> Option<Self> {
-        let name = format!("{:?}", file.file_name());
-        let rgx = Regex::new(SS_FORMAT)
-            .expect("Error constructing regex");
-        
-        let parts = rgx.captures(name.as_str());
-
-        match parts {
-            Some(c) => {
-                let day = c.get(1)
-                    .expect("Couldn't collect day from filename")
-                    .as_str();
-                let month = c.get(2)
-                    .expect("Couldn't collect month from filename")
-                    .as_str();
-                let year = c.get(3)
-                    .expect("Couldn't collect year from filename")
-                    .as_str();
-                //println!("{:?}", time);
-                Some(Self(format!("{}-{}-{}", year, month, day)))
-            },
-            None => None,
-        }
+    match parts {
+        Some(c) => {
+            let day: u32 = c.get(1)
+                .expect("Couldn't collect day from filename")
+                .as_str()
+                .parse()
+                .expect("Couldn't parse day to u32");
+            let month: u32 = c.get(2)
+                .expect("Couldn't collect month from filename")
+                .as_str()
+                .parse()
+                .expect("Couldn't parse month to u32");
+            let year: i32 = c.get(3)
+                .expect("Couldn't collect year from filename")
+                .as_str()
+                .parse()
+                .expect("Couldn't parse year to i32");
+            //println!("{:?}", time);
+            let date = Local.ymd(year, month, day);
+            Some(date)
+        },
+        None => None,
     }
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let rgx = Regex::new(SS_FORMAT)
         .expect("Error constructing regex");
 
@@ -73,8 +77,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|f| ScreenshotData::from_direntry(f.expect("Uknown error during unwrapping direntries")));
 
     
+    if let Err(e) = std::fs::create_dir(OUTPUT_FOLDER) {
+        return Err(e.into_inner().expect("Error getting IO Error"));
+    }
+
     for f in files {
-        println!("{:?}", f);
+        let new_name = format!("ffxiv_{}_1.png", 
+            f.timestamp.format("%Y-%m-%d"),
+        );
+        match std::fs::copy(f.file.path(), format!("{}/{}", OUTPUT_FOLDER, new_name)) {
+            Ok(ok) => println!("Copied {:?}", ok),
+            Err(e) => println!("Failed to copy {:?}", e),
+        }
     }
 
     Ok(())
