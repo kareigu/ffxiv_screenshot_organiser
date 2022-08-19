@@ -1,7 +1,28 @@
-main
+
 screenshots/
 _screenshots/
 
-# Added by cargo
 
-/target
+/buildbuild/
+bin/
+obj/
+.vs/
+.ninja*
+*.ninja
+.clangd/
+.vscode/
+.cmake/
+
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+CPack*
+CMake*.json
