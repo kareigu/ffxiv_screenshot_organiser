@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     }
 
   for (const auto& screenshot : screenshots) {
-    fmt::print("{} -> {}\n", screenshot.file.path().filename().c_str(), screenshot.formatted_name);
+    fmt::print("{} -> {}\n", screenshot.file.path().filename().string(), screenshot.formatted_name);
 
     std::string output_path_string = fmt::format("{}/{}", OUTPUT_FOLDER, screenshot.formatted_name);
     std::filesystem::path output_path(output_path_string);
