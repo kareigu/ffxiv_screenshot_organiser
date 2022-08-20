@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <fmt/core.h>
 #include <iostream>
 #include <filesystem>
