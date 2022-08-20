@@ -115,7 +115,8 @@ int main(int argc, char** argv) {
   size_t failed_copies = 0;
   const size_t total_files = screenshots.size();
 
-  std::array<std::string, 5> recent_filenames;
+  std::array<std::string, 5> recent_filenames{};
+  recent_filenames.fill("");
 
   for (const auto& screenshot : screenshots) {
     current_file++;
