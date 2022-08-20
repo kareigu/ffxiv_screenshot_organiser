@@ -96,6 +96,7 @@ int main(int argc, char** argv) {
 
       if (!wait_for_confirm('Y'))
         return EXIT_SUCCESS;
+      
     }
   }
 
@@ -119,6 +120,7 @@ int main(int argc, char** argv) {
   std::array<std::string, 5> recent_filenames{};
   recent_filenames.fill("");
 
+  std::cout << std::endl;
   for (const auto& screenshot : screenshots) {
     current_file++;
     std::string filenames = fmt::format("{} -> {}\n", screenshot.file.path().filename().string(), screenshot.formatted_name);
