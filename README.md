@@ -2,6 +2,8 @@
 
 Tool for automatically renaming Final Fantasy XIV screenshots into a format that makes more sense for indexing. 
 
+![Preview of CLI output](screenshots/preview.png)
+
 Normally screenshots taken inside FFXIV are stored in a format of:  
 `ffxiv_{day}{month}{year}_{hour}{minute}{second}_{random_id}.png`  
 
