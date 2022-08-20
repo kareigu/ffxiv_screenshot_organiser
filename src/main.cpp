@@ -5,6 +5,13 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <ftxui/dom/elements.hpp>
+#include <ftxui/dom/node.hpp>
+#include <ftxui/screen/color.hpp>
+#include <ftxui/screen/screen.hpp>
+
+#include <chrono>
+#include <thread>
 
 struct Screenshot {
   std::string formatted_name;
@@ -24,8 +31,6 @@ bool wait_for_confirm(char default_value) {
     char input;
 
     std::cin >> input;
-
-    fmt::print("input: {}\n", input);
 
     //std::cin.ignore();
 
@@ -89,14 +94,33 @@ int main(int argc, char** argv) {
 
   fmt::print("Found {} screenshots to organise\n", screenshots.size());
 
+  if (screenshots.size() == 0)
+    return EXIT_FAILURE;
+
   if (!std::filesystem::exists(OUTPUT_FOLDER))
     if (!std::filesystem::create_directory(OUTPUT_FOLDER)) {
       fmt::print("Couldn't create output folder\n");
       return EXIT_FAILURE;
     }
 
+  std::string reset_position;
+  size_t current_file = 0;
+  size_t failed_copies = 0;
+  const size_t total_files = screenshots.size();
+
+  std::vector<std::string> recent_filenames(5);
+
   for (const auto& screenshot : screenshots) {
-    fmt::print("{} -> {}\n", screenshot.file.path().filename().string(), screenshot.formatted_name);
+    current_file++;
+    std::string filenames = fmt::format("{} -> {}\n", screenshot.file.path().filename().string(), screenshot.formatted_name);
+    std::string progress_meter = fmt::format(" {}/{}", current_file, total_files);
+
+    recent_filenames[0] = recent_filenames[1];
+    recent_filenames[1] = recent_filenames[2];
+    recent_filenames[2] = recent_filenames[3];
+    recent_filenames[3] = recent_filenames[4];
+    recent_filenames[4] = filenames;
+
 
     std::string output_path_string = fmt::format("{}/{}", OUTPUT_FOLDER, screenshot.formatted_name);
     std::filesystem::path output_path(output_path_string);
@@ -104,16 +128,47 @@ int main(int argc, char** argv) {
     std::error_code error{};
     std::filesystem::copy_file(screenshot.file.path(), output_path, error);
 
+    if (error) failed_copies++;
+
+    auto progress_gauge = ftxui::hbox({
+      ftxui::text("Processing files: "),
+      ftxui::gauge(current_file / total_files) | ftxui::flex,
+      ftxui::text(progress_meter),
+      ftxui::text(" | "),
+      ftxui::text(fmt::format("({})", failed_copies)) | ftxui::color(ftxui::Color::Red1),
+    });
+
+    ftxui::Elements vstack(6);
+    for (size_t i = 0; i < recent_filenames.size(); i++) {
+      auto color = error ? ftxui::color(ftxui::Color::Red1) : ftxui::color(ftxui::Color::Green1);
+      vstack[i] = ftxui::text(recent_filenames[i]) | color;
+    }
+
+    vstack[recent_filenames.size()] = progress_gauge;
+
+    auto copy_progress = ftxui::vbox(vstack);
+
+    auto screen = ftxui::Screen(100, 6);
+    ftxui::Render(screen, copy_progress);
+    std::cout << reset_position;
+    screen.Print();
+    reset_position = screen.ResetPosition();
+
     if (error) {
-      fmt::print("Copy unsuccesfull\n");
       continue;
     }
 
 
     const auto original_write_time = std::filesystem::last_write_time(screenshot.file.path());
     std::filesystem::last_write_time(output_path, original_write_time);
-    fmt::print("Copied successfully\n");
+
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(5s);
+
+    //fmt::print("Copied successfully\n");
+    
   }
+  std::cout << std::endl;
 
   return EXIT_SUCCESS;
 }

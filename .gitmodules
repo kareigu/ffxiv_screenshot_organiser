@@ -1,3 +1,6 @@
 [submodule "vendor/fmt"]
 	path = vendor/fmt
 	url = git@github.com:fmtlib/fmt.git
+[submodule "vendor/ftxui"]
+	path = vendor/ftxui
+	url = git@github.com:ArthurSonzogni/FTXUI.git
