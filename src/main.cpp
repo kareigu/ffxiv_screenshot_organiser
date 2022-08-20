@@ -19,6 +19,8 @@ constexpr auto SCREENSHOT_FOLDER = "./screenshots";
 constexpr auto OUTPUT_FOLDER = "./_screenshots";
 constexpr auto REGEX_STRING = "^ffxiv_([0-3][0-9])([0-1][0-9])([0-9]{4})_([0-2][0-9])([0-6][0-9])([0-6][0-9])_([0-9]{3}).png$";
 
+constexpr size_t SCREEN_WIDTH = 100;
+
 inline bool check_answer(char input) {
   return input == 'y' || input == 'Y';
 }
@@ -74,14 +76,22 @@ int main(int argc, char** argv) {
   }
 
   if (invalid_files.size() > 0) {
-    fmt::print("Found {} invalid filename(s), would you like to list them? (y, N) ", invalid_files.size());
+    fmt::print("Found {} invalid filename(s), would you like to list them? (y, n) ", invalid_files.size());
 
     if (wait_for_confirm('N')) {
+      ftxui::Elements invalid_filenames;
+      invalid_filenames.push_back(ftxui::separator());
       for (const auto& invalid : invalid_files) {
-        fmt::print("{}\n", invalid);
+        invalid_filenames.push_back(ftxui::text(invalid) | ftxui::color(ftxui::Color::Red1));
       }
+      invalid_filenames.push_back(ftxui::separator());
+      auto view = ftxui::vbox(invalid_filenames);
+      auto screen = ftxui::Screen(SCREEN_WIDTH, invalid_filenames.size());
+      ftxui::Render(screen, view);
+      screen.Print();
+      fmt::print("\n");
 
-      fmt::print("Continue processing files? (Y, n) ");
+      fmt::print("Continue processing files? (y, n) ");
 
       if (!wait_for_confirm('Y'))
         return EXIT_SUCCESS;
@@ -105,7 +115,7 @@ int main(int argc, char** argv) {
   size_t failed_copies = 0;
   const size_t total_files = screenshots.size();
 
-  std::vector<std::string> recent_filenames(5);
+  std::array<std::string, 5> recent_filenames;
 
   for (const auto& screenshot : screenshots) {
     current_file++;
@@ -136,16 +146,18 @@ int main(int argc, char** argv) {
     });
 
     ftxui::Elements vstack{};
+    vstack.push_back(ftxui::separator());
     for (const auto& filenames : recent_filenames) {
       auto color = error ? ftxui::color(ftxui::Color::Red1) : ftxui::color(ftxui::Color::Green1);
       vstack.push_back(ftxui::text(filenames) | color);
     }
 
     vstack.push_back(progress_gauge);
+    vstack.push_back(ftxui::separator());
 
     auto copy_progress = ftxui::vbox(vstack);
 
-    auto screen = ftxui::Screen(100, 6);
+    auto screen = ftxui::Screen(SCREEN_WIDTH, vstack.size());
     ftxui::Render(screen, copy_progress);
 
     std::cout << reset_position;
