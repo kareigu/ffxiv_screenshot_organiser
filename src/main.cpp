@@ -138,13 +138,13 @@ int main(int argc, char** argv) {
       ftxui::text(fmt::format("({})", failed_copies)) | ftxui::color(ftxui::Color::Red1),
     });
 
-    ftxui::Elements vstack(6);
-    for (size_t i = 0; i < recent_filenames.size(); i++) {
+    ftxui::Elements vstack{};
+    for (const auto& filenames : recent_filenames) {
       auto color = error ? ftxui::color(ftxui::Color::Red1) : ftxui::color(ftxui::Color::Green1);
-      vstack[i] = ftxui::text(recent_filenames[i]) | color;
+      vstack.push_back(ftxui::text(filenames) | color);
     }
 
-    vstack[recent_filenames.size()] = progress_gauge;
+    vstack.push_back(progress_gauge);
 
     auto copy_progress = ftxui::vbox(vstack);
 
