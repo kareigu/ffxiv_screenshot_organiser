@@ -15,6 +15,26 @@ constexpr auto SCREENSHOT_FOLDER = "./screenshots";
 constexpr auto OUTPUT_FOLDER = "./_screenshots";
 constexpr auto REGEX_STRING = "^ffxiv_([0-3][0-9])([0-1][0-9])([0-9]{4})_([0-2][0-9])([0-6][0-9])([0-6][0-9])_([0-9]{3}).png$";
 
+inline bool check_answer(char input) {
+  return input == 'y' || input == 'Y';
+}
+
+bool wait_for_confirm(char default_value) {
+  while (true) {
+    char input;
+
+    std::cin >> input;
+
+    fmt::print("input: {}\n", input);
+
+    //std::cin.ignore();
+
+    if (input == '\n') input = default_value;
+    if (input == 'y' || input == 'Y') return true;
+    if (input == 'n' || input == 'N') return false;
+  }
+}
+
 
 int main(int argc, char** argv) {
   if (!std::filesystem::exists(SCREENSHOT_FOLDER)) {
@@ -24,6 +44,7 @@ int main(int argc, char** argv) {
 
 
   std::vector<Screenshot> screenshots{};
+  std::vector<std::string> invalid_files{};
 
   std::regex screenshot_regex(REGEX_STRING);
 
@@ -45,8 +66,26 @@ int main(int argc, char** argv) {
       std::string new_name = fmt::format("ffxiv_{}-{}-{}--{}-{}-{}_{}.png", year, month, day, hour, minute, second, id);
 
       screenshots.push_back({new_name, file});
-    } 
+    } else {
+      invalid_files.push_back(file.path().filename().string());
+    }
   }
+
+  if (invalid_files.size() > 0) {
+    fmt::print("Found {} invalid filename(s), would you like to list them? (y, N) ", invalid_files.size());
+
+    if (wait_for_confirm('N')) {
+      for (const auto& invalid : invalid_files) {
+        fmt::print("{}\n", invalid);
+      }
+
+      fmt::print("Continue processing files? (Y, n) ");
+
+      if (!wait_for_confirm('Y'))
+        return EXIT_SUCCESS;
+    }
+  }
+
 
   fmt::print("Found {} screenshots to organise\n", screenshots.size());
 
