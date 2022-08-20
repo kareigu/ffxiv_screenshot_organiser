@@ -166,5 +166,11 @@ int main(int argc, char** argv) {
   }
   fmt::print("\n");
 
+  fmt::print("Press ENTER to exit");
+  char tmp;
+  std::cin.ignore();
+  std::cin.get(tmp);
+
+
   return EXIT_SUCCESS;
 }
