@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
       auto screen = ftxui::Screen(SCREEN_WIDTH, invalid_filenames.size());
       ftxui::Render(screen, view);
       screen.Print();
-      fmt::print("\n");
+      std::cout << std::endl;
 
       fmt::print("Continue processing files? (y, n) ");
 
@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
     //fmt::print("Copied successfully\n");
     
   }
-  fmt::print("\n");
+  std::cout << std::endl;
 
   fmt::print("Press ENTER to exit");
   char tmp;
