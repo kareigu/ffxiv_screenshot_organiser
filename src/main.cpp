@@ -10,9 +10,6 @@
 #include <ftxui/screen/color.hpp>
 #include <ftxui/screen/screen.hpp>
 
-#include <chrono>
-#include <thread>
-
 struct Screenshot {
   std::string formatted_name;
   std::filesystem::directory_entry file;
@@ -150,8 +147,9 @@ int main(int argc, char** argv) {
 
     auto screen = ftxui::Screen(100, 6);
     ftxui::Render(screen, copy_progress);
-    fmt::print(reset_position);
-    fmt::print(screen.ToString());
+
+    std::cout << reset_position;
+    screen.Print();
     reset_position = screen.ResetPosition();
 
     if (error) {
@@ -162,8 +160,6 @@ int main(int argc, char** argv) {
     const auto original_write_time = std::filesystem::last_write_time(screenshot.file.path());
     std::filesystem::last_write_time(output_path, original_write_time);
 
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(5s);
 
     //fmt::print("Copied successfully\n");
     
