@@ -150,8 +150,8 @@ int main(int argc, char** argv) {
 
     auto screen = ftxui::Screen(100, 6);
     ftxui::Render(screen, copy_progress);
-    std::cout << reset_position;
-    screen.Print();
+    fmt::print(reset_position);
+    fmt::print(screen.ToString());
     reset_position = screen.ResetPosition();
 
     if (error) {
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
     //fmt::print("Copied successfully\n");
     
   }
-  std::cout << std::endl;
+  fmt::print("\n");
 
   return EXIT_SUCCESS;
 }
